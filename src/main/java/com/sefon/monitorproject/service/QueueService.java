@@ -11,5 +11,11 @@ import java.util.Queue;
  */
 public interface QueueService {
 
+    /**
+     * 设置队列
+     * @param dataQueue
+     * @param cacheQueue
+     * @param json
+     */
     void setQueue(Queue dataQueue, Queue cacheQueue, JSONObject json);
 }

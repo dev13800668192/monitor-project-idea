@@ -1,7 +1,5 @@
 package com.sefon.monitorproject.service.impl;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.sefon.monitorproject.dao.ClientDataDao;
 import com.sefon.monitorproject.mapper.ClientDataMapper;
 import com.sefon.monitorproject.service.ClientDataService;
@@ -27,9 +25,9 @@ public class ClientDataServiceImpl implements ClientDataService {
 
     @Override
     @Cacheable(value = "ClientData")
-    public int  insertClientData(Queue queue) {
+    public void insertClientData(Queue queue) {
         List<ClientDataDao> data =(List<ClientDataDao>) queue;
-        return clientDataMapper.insertList(data);
+        clientDataMapper.insertList(data);
     }
 
     @Override
