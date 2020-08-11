@@ -25,18 +25,23 @@ public class MonitorController {
 
     @Autowired
     private QueueService queueService;
-
     private Queue clientQueue = new LinkedList();
     private Queue clientCacheQueue =new LinkedList();
 
 
 
+
+    /**
+     * 提供接口，用于客户端返回性能数据
+     * @param json
+     * @return
+     */
     @PostMapping("/client/pushData")
     public String pushData(@RequestBody JSONObject json){
 
         queueService.setQueue(clientQueue,clientCacheQueue,json);
 
-        if (clientQueue.size()>=2) {
+        if (clientQueue.size()>=3) {
             clientDataService.insertClientData(clientQueue);
             clientQueue.clear();
         }
@@ -47,12 +52,23 @@ public class MonitorController {
         return "true";
     }
 
+    /**
+     * 获得实时数据缓存队列
+     * @return
+     */
     @GetMapping("/client/cacheData")
     public List<ClientDataDao> getClientCacheDate(){
         List<ClientDataDao> clientDataDaoList = (List<ClientDataDao>) clientCacheQueue;
         return clientDataDaoList;
     }
 
+
+    /**
+     * 根据时间条件展示历史数据
+     * @param minTime
+     * @param maxTime
+     * @return
+     */
     @PostMapping("/client/AllData")
     public List<ClientDataDao> getClientAllDate
             (@RequestParam(value = "minTime",defaultValue = "") String minTime,

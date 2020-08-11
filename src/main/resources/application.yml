@@ -6,9 +6,11 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 server:
-  port: 8077
+  port: 8080
 
 mybatis:
   type-aliases-package: com.sefon.monitorproject.dao
   configuration:
     map-underscore-to-camel-case: false
+
+

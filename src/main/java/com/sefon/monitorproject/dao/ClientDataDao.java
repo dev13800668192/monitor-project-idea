@@ -1,5 +1,7 @@
 package com.sefon.monitorproject.dao;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import javax.persistence.*;
 import java.util.Date;
 
@@ -33,6 +35,7 @@ public class ClientDataDao {
     private String io;
 
     @Column(name = "updateTime")
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     private Date updateTime;
 
     public Long getId() {

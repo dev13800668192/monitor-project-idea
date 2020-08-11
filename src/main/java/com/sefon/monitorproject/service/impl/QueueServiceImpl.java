@@ -21,7 +21,7 @@ public class QueueServiceImpl implements QueueService {
 
         dataQueue.offer(clientDataDao);
         cacheQueue.offer(clientDataDao);
-        if (cacheQueue.size()>=60){
+        if (cacheQueue.size()>=2){
             cacheQueue.poll();
         }
     }
