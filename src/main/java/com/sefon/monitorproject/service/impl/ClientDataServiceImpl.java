@@ -45,13 +45,6 @@ public class ClientDataServiceImpl implements ClientDataService {
      */
     @Override
     public List<ClientDataDao> returnAllData(List<ClientDataDao> list) {
-        ClientDataDao obj = new ClientDataDao();
-        obj.setCpu("0");
-        obj.setFps("0");
-        obj.setGpu("0");
-        obj.setHardDisk("0");
-        obj.setIo("0");
-        obj.setMemory("0");
         if(list.size()==0){
            list = findAllData("","");
         }
@@ -66,7 +59,14 @@ public class ClientDataServiceImpl implements ClientDataService {
         int num =(int) (difference / interval);
 
         for(int i=0;i<=num;i++ ){
-            if(list.get(i).getUpdateTime().getTime()!=min.getTime()+interval*i){
+            if(list.get(i).getUpdateTime().getTime()!=(min.getTime()+interval*i)){
+                ClientDataDao obj = new ClientDataDao();
+                obj.setCpu("0");
+                obj.setFps("0");
+                obj.setGpu("0");
+                obj.setHardDisk("0");
+                obj.setIo("0");
+                obj.setMemory("0");
                 obj.setIp(list.get(i).getIp());
                 obj.setHostname(list.get(i).getHostname());
                 obj.setUpdateTime(new Date(min.getTime()+interval*i));
