@@ -6,11 +6,11 @@ import com.sefon.monitorproject.dao.ClientDataDao;
 import com.sefon.monitorproject.service.ClientDataService;
 import com.sefon.monitorproject.service.QueueService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
+import javax.annotation.PostConstruct;
+import java.util.*;
 
 /**
  * @author by
@@ -27,6 +27,7 @@ public class MonitorController {
     private QueueService queueService;
     private Queue clientQueue = new LinkedList();
     private Queue clientCacheQueue =new LinkedList();
+    private List<ClientDataDao> allData = new ArrayList<>();
 
 
 
@@ -70,11 +71,38 @@ public class MonitorController {
      * @return
      */
     @PostMapping("/client/AllData")
-    public List<ClientDataDao> getClientAllDate
+    public List<Map<String,Object>> getClientAllDate
             (@RequestParam(value = "minTime",defaultValue = "") String minTime,
              @RequestParam(value = "maxTime",defaultValue = "") String maxTime){
-        System.out.println(clientDataService.findAllData(minTime,maxTime));
-        return clientDataService.findAllData(minTime,maxTime);
+        List<String> cpuList=new ArrayList<>();
+        List<String> gpuList=new ArrayList<>();
+        List<String> memoryList=new ArrayList<>();
+        List<String> fpsList=new ArrayList<>();
+        List<String> hardDiskList=new ArrayList<>();
+        List<String> ioList=new ArrayList<>();
+        List<String> updateTimeList=new ArrayList<>();
+
+        if (!"".equals(minTime)&&!"".equals(maxTime)){
+
+            return clientDataService.paramDataList(clientDataService.findAllData(minTime, maxTime),
+                    cpuList,gpuList,memoryList,fpsList,hardDiskList,ioList,updateTimeList);
+        }else{
+            if (allData.size()==0){
+                allData=(List<ClientDataDao>) clientQueue;
+            }
+            return clientDataService.paramDataList(clientDataService.returnAllData(allData),
+                    cpuList,gpuList,memoryList,fpsList,hardDiskList,ioList,updateTimeList);
+        }
     }
 
+    /**
+     * 定时更新缓存的全部数据
+     */
+    @PostConstruct
+    @Scheduled(cron = "0 0/10 * * * ?")
+    public void updateAllData() {
+
+        allData=clientDataService.findAllData("","");
+
+    }
 }

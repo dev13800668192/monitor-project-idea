@@ -1,8 +1,12 @@
 package com.sefon.monitorproject.service;
 
+import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.sefon.monitorproject.dao.ClientDataDao;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 
 /**
@@ -25,5 +29,14 @@ public interface ClientDataService {
      * @return List<ClientDataDao>
      */
     List<ClientDataDao> findAllData(String time1,String time2);
+
+    List<ClientDataDao> returnAllData(List<ClientDataDao> list);
+
+
+    List<Map<String,Object>> paramDataList(List<ClientDataDao> list,
+                                           List<String> cpuList, List<String> gpuList,
+                                           List<String> memoryList, List<String> fpsList,
+                                           List<String> hardDiskList, List<String> ioList,
+                                           List<String> updateTimeList);
 
 }
