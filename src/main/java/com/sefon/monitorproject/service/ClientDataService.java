@@ -3,6 +3,7 @@ package com.sefon.monitorproject.service;
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.sefon.monitorproject.dao.ClientDataDao;
+import com.sefon.monitorproject.dao.DeviceDao;
 
 import java.util.Date;
 import java.util.List;
@@ -22,15 +23,19 @@ public interface ClientDataService {
      */
     void insertClientData(Queue queue);
 
+    void insertDevices(List<DeviceDao> devices);
+
     /**
      * 返回数据库中所有客户端性能数据
      * @param time1
      * @param time2
      * @return List<ClientDataDao>
      */
-    List<ClientDataDao> findAllData(String time1,String time2);
+    List<ClientDataDao> findAllData(String time1,String time2,String ip);
 
     List<ClientDataDao> returnAllData(List<ClientDataDao> list);
+
+    List<DeviceDao> findDevice();
 
 
     List<Map<String,Object>> paramDataList(List<ClientDataDao> list,

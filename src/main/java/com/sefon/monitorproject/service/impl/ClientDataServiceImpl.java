@@ -2,7 +2,9 @@ package com.sefon.monitorproject.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.sefon.monitorproject.dao.ClientDataDao;
+import com.sefon.monitorproject.dao.DeviceDao;
 import com.sefon.monitorproject.mapper.ClientDataMapper;
+import com.sefon.monitorproject.mapper.DeviceMapper;
 import com.sefon.monitorproject.service.ClientDataService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -21,6 +23,8 @@ public class ClientDataServiceImpl implements ClientDataService {
 
     @Autowired
     private ClientDataMapper clientDataMapper;
+    @Autowired
+    private DeviceMapper deviceMapper;
 
     @Override
     @Cacheable(value = "ClientData")
@@ -30,9 +34,14 @@ public class ClientDataServiceImpl implements ClientDataService {
     }
 
     @Override
-    public List<ClientDataDao> findAllData(String minTime,String maxTime) {
+    public void insertDevices(List<DeviceDao> devices) {
+        deviceMapper.insertList(devices);
+    }
+
+    @Override
+    public List<ClientDataDao> findAllData(String minTime,String maxTime,String ip) {
         if (!"".equals(minTime)&&!"".equals(maxTime)){
-            return clientDataMapper.findDataByTime(minTime, maxTime);
+            return clientDataMapper.findDataByTime(minTime, maxTime,ip);
         }else{
             return clientDataMapper.findAllData();
         }
@@ -45,21 +54,26 @@ public class ClientDataServiceImpl implements ClientDataService {
      */
     @Override
     public List<ClientDataDao> returnAllData(List<ClientDataDao> list) {
+        List<ClientDataDao> retrunList = new ArrayList<>();
         if(list.size()==0){
-           list = findAllData("","");
+           retrunList = findAllData("","","");
+        }else{
+            retrunList=list;
         }
 
-        Date max = list.get(list.size() - 1).getUpdateTime();
-        Date min = list.get(0).getUpdateTime();
+        Date max = retrunList.get(retrunList.size() - 1).getUpdateTime();
+        Date min = retrunList.get(0).getUpdateTime();
 //            计算时间差
         long difference =max.getTime()-min.getTime();
 //            计算时间间隔
-        long interval = list.get(1).getUpdateTime().getTime()-list.get(0).getUpdateTime().getTime();
+        long interval = retrunList.get(1).getUpdateTime().getTime()-retrunList.get(0).getUpdateTime().getTime();
 
         int num =(int) (difference / interval);
 
         for(int i=0;i<=num;i++ ){
-            if(list.get(i).getUpdateTime().getTime()!=(min.getTime()+interval*i)){
+            if(retrunList.get(i).getUpdateTime().getTime()!=(min.getTime()+interval*i)){
+                Date d =retrunList.get(i).getUpdateTime();
+                Date d2 = new Date(min.getTime()+interval*i);
                 ClientDataDao obj = new ClientDataDao();
                 obj.setCpu("0");
                 obj.setFps("0");
@@ -67,14 +81,23 @@ public class ClientDataServiceImpl implements ClientDataService {
                 obj.setHardDisk("0");
                 obj.setIo("0");
                 obj.setMemory("0");
-                obj.setIp(list.get(i).getIp());
-                obj.setHostname(list.get(i).getHostname());
+                obj.setIp(retrunList.get(i).getIp());
+                obj.setHostname(retrunList.get(i).getHostname());
                 obj.setUpdateTime(new Date(min.getTime()+interval*i));
-                list.add(i,obj);
+                if(retrunList.get(i).getUpdateTime().getTime()%interval==0){
+                    retrunList.add(i,obj);
+                }else {
+                    retrunList.set(i, obj);
+                }
             }
         }
 
-        return list;
+        return retrunList;
+    }
+
+    @Override
+    public List<DeviceDao> findDevice() {
+        return deviceMapper.findDevices();
     }
 
     @Override

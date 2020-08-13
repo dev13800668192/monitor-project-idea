@@ -27,7 +27,7 @@ class MonitorProjectApplicationTests {
         data.setIo("0");
         data.setMemory("0");
 
-        allData = clientDataService.findAllData("", "");
+        allData = clientDataService.findAllData("", "","");
         Date max = allData.get(allData.size() - 1).getUpdateTime();
         Date min = allData.get(0).getUpdateTime();
         Date other = allData.get(1).getUpdateTime();

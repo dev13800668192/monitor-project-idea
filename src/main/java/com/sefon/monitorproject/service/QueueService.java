@@ -1,7 +1,11 @@
 package com.sefon.monitorproject.service;
 
 import com.alibaba.fastjson.JSONObject;
+import com.sefon.monitorproject.dao.ClientDataDao;
+import com.sefon.monitorproject.dao.DeviceDao;
 
+import java.util.List;
+import java.util.Map;
 import java.util.Queue;
 
 /**
@@ -17,5 +21,7 @@ public interface QueueService {
      * @param cacheQueue
      * @param json
      */
-    void setQueue(Queue dataQueue, Queue cacheQueue, JSONObject json);
+    void setQueue(Queue dataQueue, Queue cacheQueue, JSONObject json, Map<String,List<ClientDataDao>> cacheDataList);
+
+    List<DeviceDao> setDevice(Queue dataQueue, List<DeviceDao> devices);
 }
