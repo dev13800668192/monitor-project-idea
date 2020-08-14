@@ -53,12 +53,19 @@ public class ClientDataServiceImpl implements ClientDataService {
      * @return
      */
     @Override
-    public List<ClientDataDao> returnAllData(List<ClientDataDao> list) {
+    public List<ClientDataDao> returnAllData(List<ClientDataDao> list,String ip) {
         List<ClientDataDao> retrunList = new ArrayList<>();
         if(list.size()==0){
-           retrunList = findAllData("","","");
+           retrunList = findAllData("","",ip);
         }else{
-            retrunList=list;
+            for (ClientDataDao o: list) {
+                if (o.getIp().equals(ip)) {
+                    retrunList.add(o);
+                }
+            }
+            if (retrunList.size()==0){
+                return retrunList;
+            }
         }
 
         Date max = retrunList.get(retrunList.size() - 1).getUpdateTime();

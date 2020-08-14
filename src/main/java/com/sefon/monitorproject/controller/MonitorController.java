@@ -49,7 +49,7 @@ public class MonitorController {
             clientDataService.insertDevices(newDevices);
         }
 
-        if (clientQueue.size()>=3) {
+        if (clientQueue.size()>=60) {
             clientDataService.insertClientData(clientQueue);
             clientQueue.clear();
         }
@@ -84,7 +84,7 @@ public class MonitorController {
     public List<Map<String,Object>> getClientAllDate
             (@RequestParam(value = "minTime",defaultValue = "") String minTime,
              @RequestParam(value = "maxTime",defaultValue = "") String maxTime,
-             @RequestParam(value = "ip",defaultValue = "")String ip){
+             @RequestParam(name = "ip",defaultValue = "")String ip){
         List<String> cpuList=new ArrayList<>();
         List<String> gpuList=new ArrayList<>();
         List<String> memoryList=new ArrayList<>();
@@ -94,10 +94,10 @@ public class MonitorController {
         List<String> updateTimeList=new ArrayList<>();
 
         if (!"".equals(minTime)&&!"".equals(maxTime)){
-            return clientDataService.paramDataList(clientDataService.findAllData(minTime, maxTime,ip),
+            return clientDataService.paramDataList(clientDataService.returnAllData(clientDataService.findAllData(minTime, maxTime,ip),ip),
                     cpuList,gpuList,memoryList,fpsList,hardDiskList,ioList,updateTimeList);
         }else{
-            return clientDataService.paramDataList(clientDataService.returnAllData(allData),
+            return clientDataService.paramDataList(clientDataService.returnAllData(allData,ip),
                     cpuList,gpuList,memoryList,fpsList,hardDiskList,ioList,updateTimeList);
         }
     }
@@ -106,13 +106,13 @@ public class MonitorController {
      * 定时更新缓存的全部数据
      */
     @PostConstruct
-    @Scheduled(cron = "0 0 0/1 * * ?")
+    @Scheduled(cron = "0 0/10 * * * ?")
     public void updateAllData() {
         allData=clientDataService.findAllData("","","");
     }
 
     @PostConstruct
-    @Scheduled(cron = "0/10 * * * * ?")
+    @Scheduled(cron = "0/15 * * * * ?")
     public void updateDevice() {
         devices=clientDataService.findDevice();
     }

@@ -33,7 +33,7 @@ public interface ClientDataService {
      */
     List<ClientDataDao> findAllData(String time1,String time2,String ip);
 
-    List<ClientDataDao> returnAllData(List<ClientDataDao> list);
+    List<ClientDataDao> returnAllData(List<ClientDataDao> list,String ip);
 
     List<DeviceDao> findDevice();
 
