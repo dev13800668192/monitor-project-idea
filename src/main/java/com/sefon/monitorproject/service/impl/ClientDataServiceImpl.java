@@ -56,7 +56,12 @@ public class ClientDataServiceImpl implements ClientDataService {
     public List<ClientDataDao> returnAllData(List<ClientDataDao> list,String ip) {
         List<ClientDataDao> retrunList = new ArrayList<>();
         if(list.size()==0){
-           retrunList = findAllData("","",ip);
+           list = findAllData("","",ip);
+            for (ClientDataDao o: list) {
+                if (o.getIp().equals(ip)) {
+                    retrunList.add(o);
+                }
+            }
         }else{
             for (ClientDataDao o: list) {
                 if (o.getIp().equals(ip)) {

@@ -44,6 +44,7 @@ public class MonitorController {
     public String pushData(@RequestBody JSONObject json){
 
         queueService.setQueue(clientQueue,clientCacheQueue,json,cacheDataList);
+
         List<DeviceDao> newDevices = queueService.setDevice(clientQueue, devices);
         if (newDevices.size()>0){
             clientDataService.insertDevices(newDevices);
@@ -108,12 +109,14 @@ public class MonitorController {
     @PostConstruct
     @Scheduled(cron = "0 0/10 * * * ?")
     public void updateAllData() {
+        allData.clear();
         allData=clientDataService.findAllData("","","");
     }
 
     @PostConstruct
     @Scheduled(cron = "0/15 * * * * ?")
     public void updateDevice() {
+        devices.clear();
         devices=clientDataService.findDevice();
     }
 }
