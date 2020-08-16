@@ -15,13 +15,11 @@ import java.util.Queue;
  */
 public interface QueueService {
 
-    /**
-     * 设置队列
-     * @param dataQueue
-     * @param cacheQueue
-     * @param json
-     */
-    void setQueue(Queue dataQueue, Queue cacheQueue, JSONObject json, Map<String,List<ClientDataDao>> cacheDataList);
+    void setQueue(List<ClientDataDao> clientList, ClientDataDao obj,
+                  Map<String,List<ClientDataDao>> cacheDataList, Map<String,String> timeMap);
 
-    List<DeviceDao> setDevice(Queue dataQueue, List<DeviceDao> devices);
+    List<DeviceDao> setDevice(Map<String,String> timeMap, List<DeviceDao> devices);
+
+    List<DeviceDao> getDevice(Map<String,String> timeMap, Map<String,
+            List<ClientDataDao>> clientCacheMap,List<DeviceDao> devices);
 }

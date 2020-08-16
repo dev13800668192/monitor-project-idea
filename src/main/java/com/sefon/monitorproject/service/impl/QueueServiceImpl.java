@@ -1,7 +1,5 @@
 package com.sefon.monitorproject.service.impl;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
 import com.sefon.monitorproject.dao.ClientDataDao;
 import com.sefon.monitorproject.dao.DeviceDao;
 import com.sefon.monitorproject.service.QueueService;
@@ -16,57 +14,87 @@ import java.util.*;
  */
 @Service
 public class QueueServiceImpl implements QueueService {
+    /**
+     * 处理数据，放入对应ip的数据列表中
+     * @param clientList 数据存储列表，入库使用
+     * @param obj 接收的数据对象
+     * @param clientDataMap 缓存数据集，根据ip分组
+     */
     @Override
-    public void setQueue(Queue dataQueue, Queue cacheQueue, JSONObject json,Map<String,List<ClientDataDao>> cacheDataList) {
-        ClientDataDao clientDataDao = JSON.parseObject(JSON.toJSONString(json.get("data")), ClientDataDao.class);
+    public void setQueue(List<ClientDataDao> clientList,
+                         ClientDataDao obj,
+                         Map<String,List<ClientDataDao>> clientDataMap,
+                         Map<String,String> timeMap) {
 
-        boolean flag = true;
-
-        for (String key: cacheDataList.keySet()
-             ) {
-            if (clientDataDao.getIp().equals(key)){
-                flag=false;
-                cacheDataList.get(key).add(clientDataDao);
-            }
-
-            if (cacheDataList.get(key).size()>=2){
-                cacheDataList.get(key).remove(0);
-            }
-        }
-
-        if (flag){
+        /*
+         * 根据客户端ip,将数据放入对应的List中
+         * 若缓存列表中存在对应的ip列表，更新数据，否则创建对应ip列表
+         */
+        if(clientDataMap.get(obj.getIp())!=null){
+            ClientDataDao remove = clientDataMap.get(obj.getIp()).remove(0);
+            timeMap.put(obj.getIp(),remove.getUpdateTime().toString());
+            clientDataMap.get(obj.getIp()).add(obj);
+        }else{
             List<ClientDataDao> newCacheData = new ArrayList<>();
-            newCacheData.add(clientDataDao);
-            cacheDataList.put(clientDataDao.getIp(), newCacheData);
+            newCacheData.add(obj);
+            clientDataMap.put(obj.getIp(), newCacheData);
+            timeMap.put(obj.getIp(),"");
         }
 
-        dataQueue.offer(clientDataDao);
-//        cacheQueue.offer(clientDataDao);
-//        if (cacheQueue.size() >= 2) {
-//            cacheQueue.poll();
-//        }
+        /*
+        将数据放入存储列表，存入数据库
+         */
+        clientList.add(obj);
     }
 
     @Override
-    public List<DeviceDao> setDevice(Queue dataQueue, List<DeviceDao> devices) {
+    public List<DeviceDao> setDevice(Map<String,String> timeMap, List<DeviceDao> devices) {
+
         List<DeviceDao> list = new ArrayList<>();
-        List<ClientDataDao> datas = (List<ClientDataDao>) dataQueue;
-        for (ClientDataDao data : datas
-        ) {
+
+        for (String time: timeMap.keySet()) {
             boolean flag = true;
-            for (DeviceDao device : devices
-            ) {
-                if (data.getIp().equals(device.getIp())) {
+
+            /*
+            判断是否存在新客户端数据
+             */
+            for (DeviceDao device : devices) {
+                if (time.equals(device.getIp())){
                     flag = false;
-                    device.setState("1");
                 }
             }
+
+            /*
+            将新客户端设备信息存入数据库
+             */
             if (flag) {
-                DeviceDao obj = new DeviceDao(data.getIp(), data.getHostname(), "0");
+                DeviceDao obj = new DeviceDao(time, "", "0");
                 list.add(obj);
                 devices.add(obj);
             }
         }
+
         return list;
+    }
+
+    /**
+     * 设置设备在线状态
+     * @param timeMap
+     * @param clientCacheMap
+     * @return
+     */
+    @Override
+    public List<DeviceDao> getDevice(Map<String, String> timeMap,
+                                     Map<String,List<ClientDataDao>> clientCacheMap,
+                                     List<DeviceDao> devices) {
+
+        for (DeviceDao device :devices){
+            if (!clientCacheMap.get(device.getIp()).get(0).getUpdateTime().toString()
+                    .equals(timeMap.get(device.getIp()))){
+                    device.setState("1");
+            }
+        }
+
+        return devices;
     }
 }

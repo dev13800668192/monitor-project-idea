@@ -19,9 +19,9 @@ public interface ClientDataService {
 
     /**
      * 将队列中的客户端数据插入数据库
-     * @param queue
+     * @param list
      */
-    void insertClientData(Queue queue);
+    void insertClientData(List<ClientDataDao> list);
 
     void insertDevices(List<DeviceDao> devices);
 

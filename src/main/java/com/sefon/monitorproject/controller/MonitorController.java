@@ -1,6 +1,5 @@
 package com.sefon.monitorproject.controller;
 
-import com.alibaba.fastjson.JSONObject;
 import com.sefon.monitorproject.dao.ClientDataDao;
 import com.sefon.monitorproject.dao.DeviceDao;
 import com.sefon.monitorproject.service.ClientDataService;
@@ -26,35 +25,52 @@ public class MonitorController {
 
     @Autowired
     private QueueService queueService;
-    private Queue clientQueue = new LinkedList();
-    private Queue clientCacheQueue =new LinkedList();
-    private Map<String,List<ClientDataDao>> cacheDataList = new HashMap<>();
+
+    private Map<String,List<ClientDataDao>> clientCacheMap = new HashMap<>();
+    private Map<String,String> timeMap = new HashMap<>();
+    private List<ClientDataDao> clientList = new ArrayList<>();
     private List<ClientDataDao> allData = new ArrayList<>();
     private List<DeviceDao> devices = new ArrayList<>();
 
 
 
 
+
     /**
      * 提供接口，用于客户端返回性能数据
-     * @param json
+     * @param obj
      * @return
      */
     @PostMapping("/client/pushData")
-    public String pushData(@RequestBody JSONObject json){
+    public String pushData(@RequestBody ClientDataDao obj){
+        /*
+        设置数据缓存列表
+         */
+        queueService.setQueue(clientList,obj,clientCacheMap,timeMap);
 
-        queueService.setQueue(clientQueue,clientCacheQueue,json,cacheDataList);
+        /*
+        判断是否有新设备接入
+         */
+        List<DeviceDao> newDevices = queueService.setDevice(timeMap, devices);
 
-        List<DeviceDao> newDevices = queueService.setDevice(clientQueue, devices);
+        /*
+        新设备入库
+         */
         if (newDevices.size()>0){
             clientDataService.insertDevices(newDevices);
         }
 
-        if (clientQueue.size()>=60) {
-            clientDataService.insertClientData(clientQueue);
-            clientQueue.clear();
+        /*
+        当缓存数据大于60条时入库，并清空缓存列表
+         */
+        if (clientList.size()>=60) {
+            clientDataService.insertClientData(clientList);
+            clientList.clear();
         }
 
+        /*
+        客户端返回信息
+         */
         return "true";
     }
 
@@ -64,7 +80,7 @@ public class MonitorController {
      */
     @GetMapping("/client/cacheData")
     public List<ClientDataDao> getClientCacheDate(@Param("ip") String ip){
-        return cacheDataList.get(ip);
+        return clientCacheMap.get(ip);
     }
 
     /**
@@ -73,7 +89,7 @@ public class MonitorController {
      */
     @GetMapping("/devices/getDevice")
     public List<DeviceDao> getDevices(){
-        return devices;
+        return queueService.getDevice(timeMap,clientCacheMap,clientDataService.findDevice());
     }
     /**
      * 根据时间条件展示历史数据
@@ -94,6 +110,8 @@ public class MonitorController {
         List<String> ioList=new ArrayList<>();
         List<String> updateTimeList=new ArrayList<>();
 
+
+
         if (!"".equals(minTime)&&!"".equals(maxTime)){
             return clientDataService.paramDataList(clientDataService.returnAllData(clientDataService.findAllData(minTime, maxTime,ip),ip),
                     cpuList,gpuList,memoryList,fpsList,hardDiskList,ioList,updateTimeList);
@@ -107,16 +125,14 @@ public class MonitorController {
      * 定时更新缓存的全部数据
      */
     @PostConstruct
-    @Scheduled(cron = "0 0/10 * * * ?")
+    @Scheduled(cron = "0/2 * * * * ?")
     public void updateAllData() {
         allData.clear();
         allData=clientDataService.findAllData("","","");
     }
 
     @PostConstruct
-    @Scheduled(cron = "0/15 * * * * ?")
     public void updateDevice() {
-        devices.clear();
         devices=clientDataService.findDevice();
     }
 }

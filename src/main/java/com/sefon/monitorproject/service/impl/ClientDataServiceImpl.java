@@ -1,6 +1,5 @@
 package com.sefon.monitorproject.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.sefon.monitorproject.dao.ClientDataDao;
 import com.sefon.monitorproject.dao.DeviceDao;
 import com.sefon.monitorproject.mapper.ClientDataMapper;
@@ -28,9 +27,8 @@ public class ClientDataServiceImpl implements ClientDataService {
 
     @Override
     @Cacheable(value = "ClientData")
-    public void insertClientData(Queue queue) {
-        List<ClientDataDao> data =(List<ClientDataDao>) queue;
-        clientDataMapper.insertList(data);
+    public void insertClientData(List<ClientDataDao> clientList) {
+        clientDataMapper.insertList(clientList);
     }
 
     @Override
@@ -38,6 +36,13 @@ public class ClientDataServiceImpl implements ClientDataService {
         deviceMapper.insertList(devices);
     }
 
+    /**
+     * 根据ip查询对应ip的所有客户端性能数据
+     * @param minTime
+     * @param maxTime
+     * @param ip
+     * @return
+     */
     @Override
     public List<ClientDataDao> findAllData(String minTime,String maxTime,String ip) {
         if (!"".equals(minTime)&&!"".equals(maxTime)){
@@ -49,43 +54,59 @@ public class ClientDataServiceImpl implements ClientDataService {
 
     /**
      * 处理返回的全部数据
-     * @param list
+     * @param allData
      * @return
      */
     @Override
-    public List<ClientDataDao> returnAllData(List<ClientDataDao> list,String ip) {
-        List<ClientDataDao> retrunList = new ArrayList<>();
-        if(list.size()==0){
-           list = findAllData("","",ip);
-            for (ClientDataDao o: list) {
-                if (o.getIp().equals(ip)) {
-                    retrunList.add(o);
-                }
-            }
-        }else{
-            for (ClientDataDao o: list) {
-                if (o.getIp().equals(ip)) {
-                    retrunList.add(o);
-                }
-            }
-            if (retrunList.size()==0){
-                return retrunList;
+    public List<ClientDataDao> returnAllData(List<ClientDataDao> allData,String ip) {
+
+        List<ClientDataDao> dataList = new ArrayList<>();
+//        List<ClientDataDao> retrunList =new ArrayList<>();
+
+        if(allData.size()==0) {
+            allData = findAllData("", "", ip);
+        }
+        for (ClientDataDao o: allData) {
+            if (o.getIp().equals(ip)) {
+                dataList.add(o);
             }
         }
+        if(dataList.size()==0){
+            return dataList;
+        }
 
-        Date max = retrunList.get(retrunList.size() - 1).getUpdateTime();
-        Date min = retrunList.get(0).getUpdateTime();
-//            计算时间差
-        long difference =max.getTime()-min.getTime();
-//            计算时间间隔
-        long interval = retrunList.get(1).getUpdateTime().getTime()-retrunList.get(0).getUpdateTime().getTime();
+        Date star = dataList.get(0).getUpdateTime();
+        Date end = dataList.get(dataList.size() - 1).getUpdateTime();
 
+//        for (long time=star.getTime();time<=end.getTime();time+=5000){
+//            ClientDataDao obj = new ClientDataDao();
+//            obj.setCpu("0");
+//            obj.setFps("0");
+//            obj.setGpu("0");
+//            obj.setHardDisk("0");
+//            obj.setIo("0");
+//            obj.setMemory("0");
+//            obj.setIp("");
+//            obj.setHostname("");
+//            obj.setUpdateTime(new Date(time));
+//            retrunList.add(obj);
+//        }
+//        for (ClientDataDao data: dataList) {
+//            for (int index=0;index<retrunList.size();index++){
+//                if (retrunList.get(index).getUpdateTime().toString().equals(data.getUpdateTime().toString())){
+//                    retrunList.set(index,data);
+//                }
+//            }
+//        }
+//        dataList.clear();
+//        return retrunList;
+
+        long difference =end.getTime()-star.getTime();
+        long interval =5000;
         int num =(int) (difference / interval);
 
         for(int i=0;i<=num;i++ ){
-            if(retrunList.get(i).getUpdateTime().getTime()!=(min.getTime()+interval*i)){
-                Date d =retrunList.get(i).getUpdateTime();
-                Date d2 = new Date(min.getTime()+interval*i);
+            if(dataList.get(i).getUpdateTime().getTime()!=(star.getTime()+interval*i)){
                 ClientDataDao obj = new ClientDataDao();
                 obj.setCpu("0");
                 obj.setFps("0");
@@ -93,25 +114,40 @@ public class ClientDataServiceImpl implements ClientDataService {
                 obj.setHardDisk("0");
                 obj.setIo("0");
                 obj.setMemory("0");
-                obj.setIp(retrunList.get(i).getIp());
-                obj.setHostname(retrunList.get(i).getHostname());
-                obj.setUpdateTime(new Date(min.getTime()+interval*i));
-                if(retrunList.get(i).getUpdateTime().getTime()%interval==0){
-                    retrunList.add(i,obj);
+                obj.setIp(dataList.get(i).getIp());
+                obj.setHostname(dataList.get(i).getHostname());
+                obj.setUpdateTime(new Date(star.getTime()+interval*i));
+                if(dataList.get(i).getUpdateTime().getTime()%interval==0){
+                    dataList.add(i,obj);
                 }else {
-                    retrunList.set(i, obj);
+                    dataList.set(i, obj);
                 }
             }
         }
-
-        return retrunList;
+        return dataList;
     }
 
+    /**
+     * 查询数据库中的设备信息
+     * @return
+     */
     @Override
     public List<DeviceDao> findDevice() {
         return deviceMapper.findDevices();
     }
 
+    /**
+     * 返回客户端各项性能数据列表
+     * @param list
+     * @param cpuList
+     * @param gpuList
+     * @param memoryList
+     * @param fpsList
+     * @param hardDiskList
+     * @param ioList
+     * @param updateTimeList
+     * @return
+     */
     @Override
     public List<Map<String,Object>> paramDataList(List<ClientDataDao> list,
                                    List<String> cpuList, List<String> gpuList,
